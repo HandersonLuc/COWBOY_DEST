@@ -49,6 +49,7 @@ smRock4.y = 510
 
 #Personagens
 cowboy = Sprite("assets/cowboy.png",1)
+borda = 15.5 # animacao
 
 cowboy_right = Sprite("assets/cowboy_walk_right_spritesheet.png",4)
 cowboy_right.set_total_duration(1000)
@@ -92,19 +93,62 @@ def desenharCenario():
     smRock4.draw()
     
 def desenharInfo(vidas,municao):
-    hearts.draw()
-    bullets.draw()
+    if vidas > 0:
+        if vidas == 5:
+            hearts = GameImage("assets/hearts5.png")
+        elif vidas == 4:
+            hearts = GameImage("assets/hearts4.png")
+        elif vidas == 3:
+            hearts = GameImage("assets/hearts3.png")
+        elif vidas == 2:
+            hearts = GameImage("assets/hearts2.png")
+        elif vidas == 1:
+            hearts = GameImage("assets/hearts1.png")
+        hearts.x = 10
+        hearts.y = 10
+        hearts.draw()
+    
+    if municao > 0:
+        if municao == 6:
+            bullets = GameImage("assets/bullets6.png")
+        elif municao == 5:
+            bullets = GameImage("assets/bullets5.png")
+        elif municao == 4:
+            bullets = GameImage("assets/bullets4.png")
+        elif municao == 3:
+            bullets = GameImage("assets/bullets3.png")
+        elif municao == 2:
+            bullets = GameImage("assets/bullets2.png")
+        elif municao == 1:
+            bullets = GameImage("assets/bullets1.png")
+        bullets.x = window.width - bullets.width - 5
+        bullets.y = window.height - bullets.height - 5
+        bullets.draw()
+    
     window.draw_text("SCORE: ", window.width - 200, 10, 30, [255,255,255],"Poppins",False,False)
     window.draw_text(str(0), window.width - 110, 10, 30, [255,255,255],"Poppins",False,False)
     
 def calculaTempo(tempo,controle):
     tempo += window.delta_time()
-    if(tempo>=1):
+    if(tempo>=1.5):
         controle = False
         tempo = 0
     return tempo, controle
 
-def movimentoPlayer(atirou,municao,recarregou):
+def colisaoCowboy():
+    if ((cowboy.x + cowboy.width - borda) >= cactus1.x) and ((cowboy.x + borda) <= (cactus1.x + cactus1.width)) and ((cowboy.y + cowboy.height) >= cactus1.y) and (cowboy.y <= (cactus1.y + cactus1.height)):
+        return True
+    elif ((cowboy.x + cowboy.width - borda) >= cactus4.x) and ((cowboy.x + borda) <= (cactus4.x + cactus4.width)) and ((cowboy.y + cowboy.height) >= cactus4.y) and (cowboy.y <= (cactus4.y + cactus4.height)):
+        return True
+    elif ((cowboy.x + cowboy.width - borda) >= rock1.x) and ((cowboy.x + borda) <= (rock1.x + rock1.width)) and ((cowboy.y + cowboy.height) >= rock1.y) and (cowboy.y <= (rock1.y + rock1.height)):
+        return True
+    elif ((cowboy.x + cowboy.width - borda) >= sand.x) and ((cowboy.x + borda) <= (sand.x + sand.width)) and ((cowboy.y + cowboy.height) >= sand.y) and (cowboy.y <= (sand.y + sand.height)):
+        return True
+    elif ((cowboy.x + cowboy.width - borda) >= bigRock.x) and ((cowboy.x + borda) <= (bigRock.x + bigRock.width)) and ((cowboy.y + cowboy.height) >= bigRock.y) and (cowboy.y <= (bigRock.y + bigRock.height)):
+        return True
+    return False
+
+def movimentoCowboy(atirou,municao,recarregou,posicao):
     if(atirou == True and municao<6):
             cowboy_attack_down.x = cowboy.x
             cowboy_attack_down.y = cowboy.y
@@ -125,8 +169,14 @@ def movimentoPlayer(atirou,municao,recarregou):
         cowboy_right.move_key_x(0.1)
         cowboy_right.draw()
         cowboy_right.update()
-        if((cowboy.x+cowboy.width)<1000):
-            cowboy.x += 100 * window.delta_time()
+        if not colisaoCowboy():
+            posicao[0] = cowboy.x
+            posicao[1] = cowboy.y
+            if((cowboy.x+cowboy.width)<1000):
+                cowboy.x += 100 * window.delta_time()
+        else:
+            cowboy.x = posicao[0]
+            cowboy.y = posicao[1]
         
     elif(keyboard.key_pressed("a")):
         cowboy_left.x = cowboy.x
@@ -134,8 +184,14 @@ def movimentoPlayer(atirou,municao,recarregou):
         cowboy_left.move_key_x(0.1)
         cowboy_left.draw()
         cowboy_left.update()
-        if(cowboy.x>0):
-            cowboy.x -= 100 * window.delta_time()
+        if not colisaoCowboy():
+            posicao[0] = cowboy.x
+            posicao[1] = cowboy.y
+            if(cowboy.x>0):
+                cowboy.x -= 100 * window.delta_time()
+        else:
+            cowboy.x = posicao[0]
+            cowboy.y = posicao[1]
         
     elif(keyboard.key_pressed("w")):
         cowboy_up.x = cowboy.x
@@ -143,8 +199,14 @@ def movimentoPlayer(atirou,municao,recarregou):
         cowboy_up.move_key_x(0.1)
         cowboy_up.draw()
         cowboy_up.update()
-        if(cowboy.y>0):
-            cowboy.y -= 100 * window.delta_time()
+        if not colisaoCowboy():
+            posicao[0] = cowboy.x
+            posicao[1] = cowboy.y
+            if(cowboy.y>0):
+                cowboy.y -= 100 * window.delta_time()
+        else:
+            cowboy.x = posicao[0]
+            cowboy.y = posicao[1]
         
     elif(keyboard.key_pressed("s")):
         cowboy_down.x = cowboy.x
@@ -152,12 +214,18 @@ def movimentoPlayer(atirou,municao,recarregou):
         cowboy_down.move_key_x(0.1)
         cowboy_down.draw()
         cowboy_down.update()
-        if((cowboy.y+cowboy.height)<600):
-            cowboy.y += 100 * window.delta_time()
+        if not colisaoCowboy():
+            posicao[0] = cowboy.x
+            posicao[1] = cowboy.y
+            if((cowboy.y+cowboy.height)<600):
+                cowboy.y += 100 * window.delta_time()
+        else:
+            cowboy.x = posicao[0]
+            cowboy.y = posicao[1]
         
     else:
         cowboy.draw()
-        
+
 def atirar(tiros,atirou,municao):
     if(atirou==False):
         if(mouse.is_button_pressed(1)):
@@ -182,9 +250,27 @@ def atirar(tiros,atirou,municao):
     
     return atirou, municao
 
+def atualizaInimigo():
+    return
+
+def colisaoTiro(tiros,tirosRemover):
+    for i in range(len(tiros)):
+        tiro.x = tiros[i][0]
+        tiro.y = tiros[i][1]
+        # Cenário
+        if Collision.collided_perfect(tiro,cactus1) or Collision.collided_perfect(tiro,cactus4) or Collision.collided_perfect(tiro,rock1) or Collision.collided_perfect(tiro,sand) or Collision.collided_perfect(tiro,bigRock):
+            tirosRemover.append(i)
+        # Inimigo
+    
+    # Atualizar
+    print(len(tirosRemover))
+    for i in range(len(tirosRemover)):
+        tiros.remove(tiros[tirosRemover[i]])
+
 def jogo():
     cowboy.x = window.width/2 - cowboy.width/2
     cowboy.y = window.height/2 - cowboy.height/2
+    posicao = [cowboy.x,cowboy.y]
     
     vidas = 5
     municao = 6
@@ -192,8 +278,13 @@ def jogo():
     tempoRecarga = 0
     
     tiros = []
-    atirou = False
+    atirou = True
     tempoEspera = 0
+    
+    tirosRemover = []
+    
+    colidiuInimigo = False
+    tempoColisao = 0
     
     while True:
         
@@ -220,7 +311,20 @@ def jogo():
         if(recarregou==True):
             tempoRecarga, recarregou = calculaTempo(tempoRecarga, recarregou)
         
-        movimentoPlayer(atirou,municao,recarregou)
+        movimentoCowboy(atirou,municao,recarregou,posicao)
+        
+        # Colisão cowboy e inimigo
+        # if Collision.collided_perfect(cowboy,enemy_right) or Collision.collided_perfect(cowboy,enemy_left):
+        #     if(colidiuInimigo==False):
+        #         vidas -= 1
+        #         colidiuInimigo = True
+        # if(colidiuInimigo==True):
+        #     tempoColisao, colidiuInimigo = calculaTempo(tempoColisao, colidiuInimigo)
+            
+        atualizaInimigo()
+        
+        colisaoTiro(tiros,tirosRemover)
+        tirosRemover = []
         
         #Animação inimigo
         enemy_right.move_key_x(0.1)
@@ -228,6 +332,11 @@ def jogo():
         enemy_right.update()
         
         desenharInfo(vidas, municao)
+        
+        # Perdeu
+        if vidas == 0:
+            window.set_background_color([0,0,0])
+            break
         
         window.update()
     
