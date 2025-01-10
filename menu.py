@@ -4,12 +4,17 @@ from PPlay.mouse import *
 
 window = Window(1000,600)
 mouse = Window.get_mouse()
+keyboard = Window.get_keyboard()
 
 menu1 = GameImage("assets/menu1.png")
 menu2 = GameImage("assets/menu2.png")
 
 def menuInstructions():
      while True:
+          #Voltar para menu
+          if keyboard.key_pressed("esc"):
+               window.set_background_color([0,0,0])
+               break
           #Jogar
           if Mouse.is_over_area(mouse,[346,442],[646,512]) and Mouse.is_button_pressed(mouse,1):
                break
@@ -28,14 +33,14 @@ def menu():
           if Mouse.is_over_area(mouse,[346,219],[646,289]) and Mouse.is_button_pressed(mouse,1):
                # window.update()
                break
-               return [True, True]
+               # return [True, True]
           
           #Instruções
           if Mouse.is_over_area(mouse,[346,310],[646,380]) and Mouse.is_button_pressed(mouse,1):
                # window.update()
                menuInstructions()
                break
-               return [True, False]
+               # return [True, False]
           
           menu1.draw()
           window.update()
