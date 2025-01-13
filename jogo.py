@@ -4,11 +4,29 @@ from PPlay.animation import *
 from PPlay.gameimage import *
 from PPlay.collision import *
 import math
+import random
 
 window = Window(1000,600)
 
 mouse = Window.get_mouse()
 keyboard = Window.get_keyboard()
+
+#Spawners
+def Spawners ():
+    lado = random.choice(['topo', 'baixo', 'esquerda', 'direita'])
+    if lado == 'topo':
+        return (random.randint(0, window.width), 0)  # Posição no topo
+    elif lado == 'baixo':
+        return (random.randint(0, window.width), window.height)  # Posição na base
+    elif lado == 'esquerda':
+        return (0, random.randint(0, window.height))  # Posição na esquerda
+    elif lado == 'direita':
+        return (window.width, random.randint(0, window.height))  # Posição na direita
+
+
+def spawn(inimigos, score):
+    spawner_position = Spawners()
+    inimigos.append([spawner_position[0], spawner_position[1]])
 
 #Cenário
 cactus1 = Sprite("assets/cactus1.png")
@@ -260,15 +278,17 @@ def atirar(tiros,atirou,municao,tirosRemover,inimigos,score):
             tirosRemover.append(i)
         # Colisão inimigo
         else:
-            for j in range(len(inimigos)):
+            for j in range(len(inimigos)-1, -1, -1):
+                print(f"inimigo {inimigos[j]} colide com bala {tiro.x}, {tiro.y}")
                 if ((tiro.x + tiro.width) >= (inimigos[j][0] + borda)) and (tiro.x <= (inimigos[j][0] + enemy_right.width - borda)) and ((tiro.y + tiro.height) >= (inimigos[j][1] + borda)) and (tiro.y <= (inimigos[j][1] + enemy_right.height - borda)):
                     tirosRemover.append(i)
                     inimigos.remove(inimigos[j])
                     score += 1
                     
     # Atualizar lista
-    for i in range(len(tirosRemover),0,-1):
-        tiros.remove(tiros[tirosRemover[i-1]])
+    for i in range(len(tirosRemover) -1,-1,-1):
+        if tirosRemover[i] < len(tiros):
+            tiros.remove(tiros[tirosRemover[i]])
     
     return atirou, municao, score
 
@@ -294,6 +314,12 @@ def jogo():
     colidiuInimigo = False
     tempoColisao = 0
     
+    wave = 0
+
+    tempo_spawn = 0
+    intervalo = 90
+    inimigos_na_wave = 1
+
     inimigosRemover = []
     
     window.delay(300)
@@ -360,12 +386,27 @@ def jogo():
                 inimigos[i][1] += 20 * window.delta_time()
             else:
                 inimigos[i][1] -= 20 * window.delta_time()
+            
+        #reset inimigos
+        if len(inimigos) == 0:
+            wave += 1
+            tempo_spawn = 0
+            inimigos_na_wave += 1
+            for _ in range(score):
+                spawn(inimigos, score)
+                
         
         # Atualizar lista
         for i in range(len(inimigosRemover),0,-1):
             inimigos.remove(inimigos[inimigosRemover[i-1]])
         inimigosRemover = []
         
+
+        tempo_spawn += window.delta_time()
+        if tempo_spawn >= intervalo and len(inimigos) < inimigos_na_wave:
+            spawn(inimigos, score)
+            tempo_spawn = 0
+
         desenharInfo(vidas,municao,score)
         
         # Perdeu

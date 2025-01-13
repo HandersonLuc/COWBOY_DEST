@@ -12,4 +12,3 @@ while True:
     else:
         #Chama o jogo até ele retornar False (esc ou morrer)
         play = jogo()
-        
