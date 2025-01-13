@@ -70,6 +70,11 @@ enemy_right.set_total_duration(1000)
 enemy_right.x = 100
 enemy_right.y = 200
 
+enemy_left = Sprite("assets/enemy_left.png",4)
+enemy_left.set_total_duration(1000)
+enemy_left.x = 100
+enemy_left.y = 200
+
 tiro = Sprite("assets/tiro.png",1)
 
 #Info
@@ -92,7 +97,7 @@ def desenharCenario():
     smRock3.draw()
     smRock4.draw()
     
-def desenharInfo(vidas,municao):
+def desenharInfo(vidas,municao,score):
     if vidas > 0:
         if vidas == 5:
             hearts = GameImage("assets/hearts5.png")
@@ -126,11 +131,11 @@ def desenharInfo(vidas,municao):
         bullets.draw()
     
     window.draw_text("SCORE: ", window.width - 200, 10, 30, [255,255,255],"Poppins",False,False)
-    window.draw_text(str(0), window.width - 110, 10, 30, [255,255,255],"Poppins",False,False)
+    window.draw_text(str(score), window.width - 110, 10, 30, [255,255,255],"Poppins",False,False)
     
 def calculaTempo(tempo,controle):
     tempo += window.delta_time()
-    if(tempo>=1.5):
+    if(tempo>=1):
         controle = False
         tempo = 0
     return tempo, controle
@@ -150,11 +155,11 @@ def colisaoCowboy():
 
 def movimentoCowboy(atirou,municao,recarregou,posicao):
     if(atirou == True and municao<6):
-            cowboy_attack_down.x = cowboy.x
-            cowboy_attack_down.y = cowboy.y
-            cowboy_attack_down.move_key_x(0.1)
-            cowboy_attack_down.draw()
-            cowboy_attack_down.update()
+        cowboy_attack_down.x = cowboy.x
+        cowboy_attack_down.y = cowboy.y
+        cowboy_attack_down.move_key_x(0.1)
+        cowboy_attack_down.draw()
+        cowboy_attack_down.update()
     
     elif(recarregou==True):
         cowboy_reload_down.x = cowboy.x
@@ -172,7 +177,7 @@ def movimentoCowboy(atirou,municao,recarregou,posicao):
         if not colisaoCowboy():
             posicao[0] = cowboy.x
             posicao[1] = cowboy.y
-            if((cowboy.x+cowboy.width)<1000):
+            if((cowboy.x+cowboy.width-borda)<1000):
                 cowboy.x += 100 * window.delta_time()
         else:
             cowboy.x = posicao[0]
@@ -187,7 +192,7 @@ def movimentoCowboy(atirou,municao,recarregou,posicao):
         if not colisaoCowboy():
             posicao[0] = cowboy.x
             posicao[1] = cowboy.y
-            if(cowboy.x>0):
+            if((cowboy.x+borda)>0):
                 cowboy.x -= 100 * window.delta_time()
         else:
             cowboy.x = posicao[0]
@@ -226,8 +231,9 @@ def movimentoCowboy(atirou,municao,recarregou,posicao):
     else:
         cowboy.draw()
 
-def atirar(tiros,atirou,municao):
+def atirar(tiros,atirou,municao,tirosRemover,inimigos,score):
     if(atirou==False):
+        # Atirou
         if(mouse.is_button_pressed(1)):
             atirou = True
             if(municao>0):
@@ -240,32 +246,31 @@ def atirar(tiros,atirou,municao):
     for i in range(len(tiros)): 
         tiro.x = tiros[i][0]
         tiro.y = tiros[i][1]
+        
+        # Desenha e incrementa
         tiro.draw()
         tiros[i][0] += math.cos(tiros[i][2]) * 200 * window.delta_time()
         tiros[i][1] += math.sin(tiros[i][2]) * 200 * window.delta_time()
             
-        if(tiro.x<0 or tiro.x>1000 or tiro.y<0 or tiro.y>600):
-            tiros.remove(tiros[i])
-            break
-    
-    return atirou, municao
-
-def atualizaInimigo():
-    return
-
-def colisaoTiro(tiros,tirosRemover):
-    for i in range(len(tiros)):
-        tiro.x = tiros[i][0]
-        tiro.y = tiros[i][1]
-        # Cenário
+        # Colisão cenário
         if Collision.collided_perfect(tiro,cactus1) or Collision.collided_perfect(tiro,cactus4) or Collision.collided_perfect(tiro,rock1) or Collision.collided_perfect(tiro,sand) or Collision.collided_perfect(tiro,bigRock):
             tirosRemover.append(i)
-        # Inimigo
+        # Saiu da tela
+        elif(tiro.x<0 or tiro.x>1000 or tiro.y<0 or tiro.y>600):
+            tirosRemover.append(i)
+        # Colisão inimigo
+        else:
+            for j in range(len(inimigos)):
+                if ((tiro.x + tiro.width) >= (inimigos[j][0] + borda)) and (tiro.x <= (inimigos[j][0] + enemy_right.width - borda)) and ((tiro.y + tiro.height) >= (inimigos[j][1] + borda)) and (tiro.y <= (inimigos[j][1] + enemy_right.height - borda)):
+                    tirosRemover.append(i)
+                    inimigos.remove(inimigos[j])
+                    score += 1
+                    
+    # Atualizar lista
+    for i in range(len(tirosRemover),0,-1):
+        tiros.remove(tiros[tirosRemover[i-1]])
     
-    # Atualizar
-    print(len(tirosRemover))
-    for i in range(len(tirosRemover)):
-        tiros.remove(tiros[tirosRemover[i]])
+    return atirou, municao, score
 
 def jogo():
     cowboy.x = window.width/2 - cowboy.width/2
@@ -273,6 +278,8 @@ def jogo():
     posicao = [cowboy.x,cowboy.y]
     
     vidas = 5
+    score = 0
+    
     municao = 6
     recarregou = False
     tempoRecarga = 0
@@ -283,8 +290,13 @@ def jogo():
     
     tirosRemover = []
     
+    inimigos = [[100,200]] # [[x,y]]
     colidiuInimigo = False
     tempoColisao = 0
+    
+    inimigosRemover = []
+    
+    window.delay(300)
     
     while True:
         
@@ -300,7 +312,8 @@ def jogo():
         desenharCenario()
         
         #Atirar
-        atirou, municao = atirar(tiros,atirou,municao)
+        atirou, municao, score = atirar(tiros,atirou,municao,tirosRemover,inimigos,score)
+        tirosRemover = []
         if(atirou==True):
             tempoEspera, atirou = calculaTempo(tempoEspera,atirou)
         
@@ -313,25 +326,47 @@ def jogo():
         
         movimentoCowboy(atirou,municao,recarregou,posicao)
         
-        # Colisão cowboy e inimigo
-        # if Collision.collided_perfect(cowboy,enemy_right) or Collision.collided_perfect(cowboy,enemy_left):
-        #     if(colidiuInimigo==False):
-        #         vidas -= 1
-        #         colidiuInimigo = True
-        # if(colidiuInimigo==True):
-        #     tempoColisao, colidiuInimigo = calculaTempo(tempoColisao, colidiuInimigo)
-            
-        atualizaInimigo()
-        
-        colisaoTiro(tiros,tirosRemover)
-        tirosRemover = []
-        
         #Animação inimigo
-        enemy_right.move_key_x(0.1)
-        enemy_right.draw()
-        enemy_right.update()
+        for i in range(len(inimigos)):
+            # Colisão cowboy e inimigo
+            if(colidiuInimigo==False):
+                if ((cowboy.x + cowboy.width - borda) >= (inimigos[i][0] + borda)) and ((cowboy.x + borda) <= (inimigos[i][0] + enemy_right.width - borda)) and ((cowboy.y + cowboy.height) >= (inimigos[i][1] + borda)) and (cowboy.y <= (inimigos[i][1] + enemy_right.height - borda)):
+                    vidas -= 1
+                    colidiuInimigo = True
+                    # Remover inimigo
+                    inimigosRemover.append(i)
+            if(colidiuInimigo==True):
+                tempoColisao, colidiuInimigo = calculaTempo(tempoColisao, colidiuInimigo)
+            
+            # Movimentação inimigo eixo X
+            if (inimigos[i][0] + enemy_right.width - borda) < (cowboy.x + borda + cowboy.width/2):
+                enemy_right.x = inimigos[i][0]
+                enemy_right.y = inimigos[i][1]
+                enemy_right.move_key_x(0.1)
+                enemy_right.draw()
+                enemy_right.update()
+                inimigos[i][0] += 20 * window.delta_time()
+            else:
+                enemy_left.x = inimigos[i][0]
+                enemy_left.y = inimigos[i][1]
+                enemy_left.move_key_x(0.1)
+                enemy_left.draw()
+                enemy_left.update()
+                if inimigos[i][0] > cowboy.x:
+                    inimigos[i][0] -= 20 * window.delta_time()
+            
+            # eixo Y
+            if inimigos[i][1] < cowboy.y:
+                inimigos[i][1] += 20 * window.delta_time()
+            else:
+                inimigos[i][1] -= 20 * window.delta_time()
         
-        desenharInfo(vidas, municao)
+        # Atualizar lista
+        for i in range(len(inimigosRemover),0,-1):
+            inimigos.remove(inimigos[inimigosRemover[i-1]])
+        inimigosRemover = []
+        
+        desenharInfo(vidas,municao,score)
         
         # Perdeu
         if vidas == 0:
