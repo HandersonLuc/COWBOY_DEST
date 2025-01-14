@@ -1,6 +1,7 @@
 from PPlay.window import *
 from PPlay.gameimage import *
 from PPlay.mouse import *
+from PPlay.sound import *
 
 window = Window(1000,600)
 mouse = Window.get_mouse()
@@ -8,6 +9,8 @@ keyboard = Window.get_keyboard()
 
 menu1 = GameImage("assets/menu1.png")
 menu2 = GameImage("assets/menu2.png")
+
+musica = Sound("sounds/Too Late To Save The Town.ogg")
 
 def menuInstructions():
      while True:
@@ -23,6 +26,8 @@ def menuInstructions():
 
 def menu():
      while True:
+          musica.play()
+          musica.set_repeat(True)
           window.set_title("Menu Cowboy Destroyers")
           
           #Sair

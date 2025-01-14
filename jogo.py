@@ -24,7 +24,7 @@ def Spawners ():
         return (window.width, random.randint(0, window.height))  # Posição na direita
 
 
-def spawn(inimigos, score):
+def spawn(inimigos, inimigos_na_wave):
     spawner_position = Spawners()
     inimigos.append([spawner_position[0], spawner_position[1]])
 
@@ -314,8 +314,8 @@ def jogo():
     colidiuInimigo = False
     tempoColisao = 0
     
+    # fazer os inimigos aparecerem um de cada vez em cada onda
     wave = 0
-
     tempo_spawn = 0
     intervalo = 90
     inimigos_na_wave = 1
@@ -386,14 +386,14 @@ def jogo():
                 inimigos[i][1] += 20 * window.delta_time()
             else:
                 inimigos[i][1] -= 20 * window.delta_time()
-            
         #reset inimigos
         if len(inimigos) == 0:
             wave += 1
             tempo_spawn = 0
-            inimigos_na_wave += 1
-            for _ in range(score):
-                spawn(inimigos, score)
+            inimigos_na_wave += 3
+            for _ in range(inimigos_na_wave):
+                spawn(inimigos, inimigos_na_wave)
+                
                 
         
         # Atualizar lista
@@ -403,9 +403,9 @@ def jogo():
         
 
         tempo_spawn += window.delta_time()
-        if tempo_spawn >= intervalo and len(inimigos) < inimigos_na_wave:
+        """if tempo_spawn >= intervalo and len(inimigos) < inimigos_na_wave:
             spawn(inimigos, score)
-            tempo_spawn = 0
+            tempo_spawn = 0"""
 
         desenharInfo(vidas,municao,score)
         
