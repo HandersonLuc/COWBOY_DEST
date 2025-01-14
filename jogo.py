@@ -5,28 +5,12 @@ from PPlay.gameimage import *
 from PPlay.collision import *
 import math
 import random
+import datetime
 
 window = Window(1000,600)
 
 mouse = Window.get_mouse()
 keyboard = Window.get_keyboard()
-
-#Spawners
-def Spawners ():
-    lado = random.choice(['topo', 'baixo', 'esquerda', 'direita'])
-    if lado == 'topo':
-        return (random.randint(0, window.width), 0)  # Posição no topo
-    elif lado == 'baixo':
-        return (random.randint(0, window.width), window.height)  # Posição na base
-    elif lado == 'esquerda':
-        return (0, random.randint(0, window.height))  # Posição na esquerda
-    elif lado == 'direita':
-        return (window.width, random.randint(0, window.height))  # Posição na direita
-
-
-def spawn(inimigos, inimigos_na_wave):
-    spawner_position = Spawners()
-    inimigos.append([spawner_position[0], spawner_position[1]])
 
 #Cenário
 cactus1 = Sprite("assets/cactus1.png")
@@ -83,6 +67,9 @@ cowboy_attack_down.set_total_duration(1000)
 cowboy_reload_down = Sprite("assets/cowboy_reload_down_spritesheet.png",5)
 cowboy_reload_down.set_total_duration(1000)
 
+cowboy_death = Sprite("assets/cowboy_death_spritesheet.png",6)
+cowboy_death.set_total_duration(2000)
+
 enemy_right = Sprite("assets/enemy_right.png",4)
 enemy_right.set_total_duration(1000)
 enemy_right.x = 100
@@ -103,6 +90,33 @@ hearts.y = 10
 bullets = GameImage("assets/bullets6.png")
 bullets.x = window.width - bullets.width - 5
 bullets.y = window.height - bullets.height - 5
+
+#Spawners
+def Spawners ():
+    lado = random.choice(['topo', 'baixo', 'esquerda', 'direita'])
+    if lado == 'topo':
+        return (random.randint(0, window.width), -40)  # Posição no topo
+    elif lado == 'baixo':
+        return (random.randint(0, window.width), window.height)  # Posição na base
+    elif lado == 'esquerda':
+        return (-40, random.randint(0, window.height))  # Posição na esquerda
+    elif lado == 'direita':
+        return (window.width, random.randint(0, window.height))  # Posição na direita
+
+
+def spawn(inimigos):
+    spawner_position = Spawners()
+    inimigos.append([spawner_position[0], spawner_position[1]])
+
+def inputNome(arquivo,pontos):
+    arquivo.write(input("Digite o seu nome (sem espaço): "))
+    arquivo.write(" ")
+    arquivo.write(str(pontos))
+    arquivo.write(" ")
+    arquivo.write(str(datetime.date.today()))
+    arquivo.write("\n")
+    arquivo.close()
+    return True
 
 def desenharCenario():
     cactus1.draw()
@@ -171,26 +185,35 @@ def colisaoCowboy():
         return True
     return False
 
-def movimentoCowboy(atirou,municao,recarregou,posicao):
+def movimentoCowboy(atirou,municao,recarregou,posicao,invencivel,morreu,vidas,tempoPiscar):
+    piscar = False
+    # Piscar
+    if invencivel == True and vidas != 0:
+        if (tempoPiscar < 0.125 or (tempoPiscar > 0.25 and tempoPiscar <= 0.375) or (tempoPiscar > 0.5 and tempoPiscar <= 0.625) or (tempoPiscar > 0.75 and tempoPiscar <= 0.875) or (tempoPiscar > 1)):
+            piscar = True
+    
     if(atirou == True and municao<6):
         cowboy_attack_down.x = cowboy.x
         cowboy_attack_down.y = cowboy.y
         cowboy_attack_down.move_key_x(0.1)
-        cowboy_attack_down.draw()
+        if invencivel == False or piscar == True:
+            cowboy_attack_down.draw()
         cowboy_attack_down.update()
     
     elif(recarregou==True):
         cowboy_reload_down.x = cowboy.x
         cowboy_reload_down.y = cowboy.y
         cowboy_reload_down.move_key_x(0.1)
-        cowboy_reload_down.draw()
+        if invencivel == False or piscar == True:
+            cowboy_reload_down.draw()
         cowboy_reload_down.update()
     
     elif(keyboard.key_pressed("d")):
         cowboy_right.x = cowboy.x
         cowboy_right.y = cowboy.y
         cowboy_right.move_key_x(0.1)
-        cowboy_right.draw()
+        if invencivel == False or piscar == True:
+            cowboy_right.draw()
         cowboy_right.update()
         if not colisaoCowboy():
             posicao[0] = cowboy.x
@@ -205,7 +228,8 @@ def movimentoCowboy(atirou,municao,recarregou,posicao):
         cowboy_left.x = cowboy.x
         cowboy_left.y = cowboy.y
         cowboy_left.move_key_x(0.1)
-        cowboy_left.draw()
+        if invencivel == False or piscar == True:
+            cowboy_left.draw()
         cowboy_left.update()
         if not colisaoCowboy():
             posicao[0] = cowboy.x
@@ -220,7 +244,8 @@ def movimentoCowboy(atirou,municao,recarregou,posicao):
         cowboy_up.x = cowboy.x
         cowboy_up.y = cowboy.y
         cowboy_up.move_key_x(0.1)
-        cowboy_up.draw()
+        if invencivel == False or piscar == True:
+            cowboy_up.draw()
         cowboy_up.update()
         if not colisaoCowboy():
             posicao[0] = cowboy.x
@@ -235,7 +260,8 @@ def movimentoCowboy(atirou,municao,recarregou,posicao):
         cowboy_down.x = cowboy.x
         cowboy_down.y = cowboy.y
         cowboy_down.move_key_x(0.1)
-        cowboy_down.draw()
+        if invencivel == False or piscar == True:
+            cowboy_down.draw()
         cowboy_down.update()
         if not colisaoCowboy():
             posicao[0] = cowboy.x
@@ -246,7 +272,7 @@ def movimentoCowboy(atirou,municao,recarregou,posicao):
             cowboy.x = posicao[0]
             cowboy.y = posicao[1]
         
-    else:
+    elif (invencivel == False or piscar == True) and morreu == False:
         cowboy.draw()
 
 def atirar(tiros,atirou,municao,tirosRemover,inimigos,score):
@@ -279,23 +305,32 @@ def atirar(tiros,atirou,municao,tirosRemover,inimigos,score):
         # Colisão inimigo
         else:
             for j in range(len(inimigos)-1, -1, -1):
-                print(f"inimigo {inimigos[j]} colide com bala {tiro.x}, {tiro.y}")
+                # print(f"inimigo {inimigos[j]} colide com bala {tiro.x}, {tiro.y}")
                 if ((tiro.x + tiro.width) >= (inimigos[j][0] + borda)) and (tiro.x <= (inimigos[j][0] + enemy_right.width - borda)) and ((tiro.y + tiro.height) >= (inimigos[j][1] + borda)) and (tiro.y <= (inimigos[j][1] + enemy_right.height - borda)):
                     tirosRemover.append(i)
                     inimigos.remove(inimigos[j])
                     score += 1
+                    break
                     
     # Atualizar lista
-    for i in range(len(tirosRemover) -1,-1,-1):
+    for i in range(len(tirosRemover)-1,-1,-1):
         if tirosRemover[i] < len(tiros):
             tiros.remove(tiros[tirosRemover[i]])
     
     return atirou, municao, score
 
 def jogo():
+    
+    arquivo = open('ranking.txt','a')
+    
     cowboy.x = window.width/2 - cowboy.width/2
     cowboy.y = window.height/2 - cowboy.height/2
     posicao = [cowboy.x,cowboy.y]
+    
+    invencivel = False
+    tempoPiscar = 0
+    morreu = False
+    cronometro = 0
     
     vidas = 5
     score = 0
@@ -310,15 +345,15 @@ def jogo():
     
     tirosRemover = []
     
-    inimigos = [[100,200]] # [[x,y]]
+    inimigos = [] # [[x,y]]
     colidiuInimigo = False
     tempoColisao = 0
     
     # fazer os inimigos aparecerem um de cada vez em cada onda
     wave = 0
-    tempo_spawn = 0
-    intervalo = 90
     inimigos_na_wave = 1
+    tempo_spawn = 0
+    frequencia = 10
 
     inimigosRemover = []
     
@@ -337,6 +372,71 @@ def jogo():
         
         desenharCenario()
         
+        #Animação inimigo
+        for i in range(len(inimigos)):
+            # Colisão cowboy e inimigo
+            if(colidiuInimigo == False) and (invencivel == False):
+                if ((cowboy.x + cowboy.width - borda) >= (inimigos[i][0] + borda)) and ((cowboy.x + borda) <= (inimigos[i][0] + enemy_right.width - borda)) and ((cowboy.y + cowboy.height) >= (inimigos[i][1] + borda)) and (cowboy.y <= (inimigos[i][1] + enemy_right.height - borda)):
+                    vidas -= 1
+                    colidiuInimigo = True
+                    invencivel = True
+                    tempoPiscar = 0
+                    # Remover inimigo
+                    inimigosRemover.append(i)
+            if(colidiuInimigo == True):
+                tempoColisao, colidiuInimigo = calculaTempo(tempoColisao, colidiuInimigo)
+                
+            colidiu = False
+            for j in range(0,i):
+                if inimigos[i][0] + enemy_right.width >= inimigos[j][0] and inimigos[i][0] <= inimigos[j][0] + enemy_right.width:
+                    colidiu = True
+                    break
+            
+            # Movimentação inimigo eixo X
+            if (inimigos[i][0] + enemy_right.width - borda) < (cowboy.x + borda + cowboy.width/2):
+                enemy_right.x = inimigos[i][0]
+                enemy_right.y = inimigos[i][1]
+                enemy_right.move_key_x(0.1)
+                enemy_right.draw()
+                enemy_right.update()
+                if not colidiu:
+                    inimigos[i][0] += 20 * window.delta_time()
+            else:
+                enemy_left.x = inimigos[i][0]
+                enemy_left.y = inimigos[i][1]
+                enemy_left.move_key_x(0.1)
+                enemy_left.draw()
+                enemy_left.update()
+                if inimigos[i][0] > cowboy.x:
+                    if not colidiu:
+                        inimigos[i][0] -= 20 * window.delta_time()
+            
+            # eixo Y
+            if inimigos[i][1] < cowboy.y:
+                inimigos[i][1] += 20 * window.delta_time()
+            else:
+                inimigos[i][1] -= 20 * window.delta_time()
+        
+        # Atualizar lista
+        for i in range(len(inimigosRemover),0,-1):
+            inimigos.remove(inimigos[inimigosRemover[i-1]])
+        inimigosRemover = []
+        
+        # Reset inimigos
+        if tempo_spawn >= frequencia:
+            if len(inimigos) < 50:
+                wave += 1
+                inimigos_na_wave += 1
+                for _ in range(inimigos_na_wave):
+                    spawn(inimigos)
+                tempo_spawn = 0
+                frequencia -= 0.01 * score
+
+        tempo_spawn += window.delta_time()
+        """if tempo_spawn >= intervalo and len(inimigos) < inimigos_na_wave:
+            spawn(inimigos, score)
+            tempo_spawn = 0"""
+        
         #Atirar
         atirou, municao, score = atirar(tiros,atirou,municao,tirosRemover,inimigos,score)
         tirosRemover = []
@@ -350,69 +450,26 @@ def jogo():
         if(recarregou==True):
             tempoRecarga, recarregou = calculaTempo(tempoRecarga, recarregou)
         
-        movimentoCowboy(atirou,municao,recarregou,posicao)
+        movimentoCowboy(atirou,municao,recarregou,posicao,invencivel,morreu,vidas,tempoPiscar)
         
-        #Animação inimigo
-        for i in range(len(inimigos)):
-            # Colisão cowboy e inimigo
-            if(colidiuInimigo==False):
-                if ((cowboy.x + cowboy.width - borda) >= (inimigos[i][0] + borda)) and ((cowboy.x + borda) <= (inimigos[i][0] + enemy_right.width - borda)) and ((cowboy.y + cowboy.height) >= (inimigos[i][1] + borda)) and (cowboy.y <= (inimigos[i][1] + enemy_right.height - borda)):
-                    vidas -= 1
-                    colidiuInimigo = True
-                    # Remover inimigo
-                    inimigosRemover.append(i)
-            if(colidiuInimigo==True):
-                tempoColisao, colidiuInimigo = calculaTempo(tempoColisao, colidiuInimigo)
-            
-            # Movimentação inimigo eixo X
-            if (inimigos[i][0] + enemy_right.width - borda) < (cowboy.x + borda + cowboy.width/2):
-                enemy_right.x = inimigos[i][0]
-                enemy_right.y = inimigos[i][1]
-                enemy_right.move_key_x(0.1)
-                enemy_right.draw()
-                enemy_right.update()
-                inimigos[i][0] += 20 * window.delta_time()
-            else:
-                enemy_left.x = inimigos[i][0]
-                enemy_left.y = inimigos[i][1]
-                enemy_left.move_key_x(0.1)
-                enemy_left.draw()
-                enemy_left.update()
-                if inimigos[i][0] > cowboy.x:
-                    inimigos[i][0] -= 20 * window.delta_time()
-            
-            # eixo Y
-            if inimigos[i][1] < cowboy.y:
-                inimigos[i][1] += 20 * window.delta_time()
-            else:
-                inimigos[i][1] -= 20 * window.delta_time()
-        #reset inimigos
-        if len(inimigos) == 0:
-            wave += 1
-            tempo_spawn = 0
-            inimigos_na_wave += 3
-            for _ in range(inimigos_na_wave):
-                spawn(inimigos, inimigos_na_wave)
-                
-                
-        
-        # Atualizar lista
-        for i in range(len(inimigosRemover),0,-1):
-            inimigos.remove(inimigos[inimigosRemover[i-1]])
-        inimigosRemover = []
-        
-
-        tempo_spawn += window.delta_time()
-        """if tempo_spawn >= intervalo and len(inimigos) < inimigos_na_wave:
-            spawn(inimigos, score)
-            tempo_spawn = 0"""
-
-        desenharInfo(vidas,municao,score)
+        tempoPiscar += window.delta_time()
+        if tempoPiscar >= 2:
+            invencivel = False
         
         # Perdeu
         if vidas == 0:
-            window.set_background_color([0,0,0])
-            break
+            morreu = True
+            cowboy_death.x = cowboy.x
+            cowboy_death.y = cowboy.y
+            cowboy_death.move_key_x(0.1)
+            cowboy_death.draw()
+            cowboy_death.update()
+            cronometro += window.delta_time()
+            if cronometro > 1:
+                if inputNome(arquivo,score):
+                    break
+
+        desenharInfo(vidas,municao,score)
         
         window.update()
     
