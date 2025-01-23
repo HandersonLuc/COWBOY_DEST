@@ -72,13 +72,12 @@ cowboy_death.set_total_duration(2000)
 
 enemy_right = Sprite("assets/enemy_right.png",4)
 enemy_right.set_total_duration(1000)
-enemy_right.x = 100
-enemy_right.y = 200
 
 enemy_left = Sprite("assets/enemy_left.png",4)
 enemy_left.set_total_duration(1000)
-enemy_left.x = 100
-enemy_left.y = 200
+
+enemy_jump_left = Sprite("assets/enemy_jump_left.png")
+enemy_jump_right = Sprite("assets/enemy_jump_right.png")
 
 tiro = Sprite("assets/tiro.png",1)
 
@@ -91,7 +90,6 @@ bullets = GameImage("assets/bullets6.png")
 bullets.x = window.width - bullets.width - 5
 bullets.y = window.height - bullets.height - 5
 
-#Spawners
 def Spawners ():
     lado = random.choice(['topo', 'baixo', 'esquerda', 'direita'])
     if lado == 'topo':
@@ -103,10 +101,22 @@ def Spawners ():
     elif lado == 'direita':
         return (window.width, random.randint(0, window.height))  # Posição na direita
 
-
 def spawn(inimigos):
     spawner_position = Spawners()
     inimigos.append([spawner_position[0], spawner_position[1]])
+
+def colisaoInimigo(inimigos,i):
+    if (((inimigos[i][0] + enemy_right.width - borda) >= cactus1.x) and ((inimigos[i][0] + borda) <= (cactus1.x + cactus1.width)) and ((inimigos[i][1] + enemy_right.height - borda) >= cactus1.y) and ((inimigos[i][1] + borda) <= (cactus1.y + cactus1.height))):
+        return True
+    elif (((inimigos[i][0] + enemy_right.width - borda) >= cactus4.x) and ((inimigos[i][0] + borda) <= (cactus4.x + cactus4.width)) and ((inimigos[i][1] + enemy_right.height - borda) >= cactus4.y) and ((inimigos[i][1] + borda) <= (cactus4.y + cactus4.height))):
+        return True
+    elif (((inimigos[i][0] + enemy_right.width - borda) >= rock1.x) and ((inimigos[i][0] + borda) <= (rock1.x + rock1.width)) and ((inimigos[i][1] + enemy_right.height - borda) >= rock1.y) and ((inimigos[i][1] + borda) <= (rock1.y + rock1.height))):
+        return True
+    elif (((inimigos[i][0] + enemy_right.width - borda) >= sand.x) and ((inimigos[i][0] + borda) <= (sand.x + sand.width)) and ((inimigos[i][1] + enemy_right.height - borda) >= sand.y) and ((inimigos[i][1] + borda) <= (sand.y + sand.height))):
+        return True
+    elif (((inimigos[i][0] + enemy_right.width - borda) >= bigRock.x) and ((inimigos[i][0] + borda) <= (bigRock.x + bigRock.width)) and ((inimigos[i][1] + enemy_right.height - borda) >= bigRock.y) and ((inimigos[i][1] + borda) <= (bigRock.y + bigRock.height))):
+        return True
+    return False
 
 def inputNome(arquivo,pontos):
     arquivo.write(input("Digite o seu nome (sem espaço): "))
@@ -394,19 +404,29 @@ def jogo():
             
             # Movimentação inimigo eixo X
             if (inimigos[i][0] + enemy_right.width - borda) < (cowboy.x + borda + cowboy.width/2):
-                enemy_right.x = inimigos[i][0]
-                enemy_right.y = inimigos[i][1]
-                enemy_right.move_key_x(0.1)
-                enemy_right.draw()
-                enemy_right.update()
+                if colisaoInimigo(inimigos,i):
+                    enemy_jump_right.x = inimigos[i][0]
+                    enemy_jump_right.y = inimigos[i][1]
+                    enemy_jump_right.draw()
+                else:
+                    enemy_right.x = inimigos[i][0]
+                    enemy_right.y = inimigos[i][1]
+                    enemy_right.move_key_x(0.1)
+                    enemy_right.draw()
+                    enemy_right.update()
                 if not colidiu:
                     inimigos[i][0] += 20 * window.delta_time()
             else:
-                enemy_left.x = inimigos[i][0]
-                enemy_left.y = inimigos[i][1]
-                enemy_left.move_key_x(0.1)
-                enemy_left.draw()
-                enemy_left.update()
+                if colisaoInimigo(inimigos,i):
+                    enemy_jump_left.x = inimigos[i][0]
+                    enemy_jump_left.y = inimigos[i][1]
+                    enemy_jump_left.draw()
+                else:
+                    enemy_left.x = inimigos[i][0]
+                    enemy_left.y = inimigos[i][1]
+                    enemy_left.move_key_x(0.1)
+                    enemy_left.draw()
+                    enemy_left.update()
                 if inimigos[i][0] > cowboy.x:
                     if not colidiu:
                         inimigos[i][0] -= 20 * window.delta_time()
